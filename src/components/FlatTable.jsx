@@ -2,11 +2,12 @@ import { ELEMENTS } from '../data/elements.js'
 import { styleFor, luminance } from '../lib/scales.js'
 
 /** 2D fallback used when WebGL is unavailable. Honours colour mode, temperature and highlights. */
-export default function FlatTable({ mode, temp, highlight, selected, onSelect }) {
+export default function FlatTable({ mode, temp, highlight, selected, onSelect, onRetry }) {
   return (
     <div className="absolute inset-0 overflow-auto px-3 pb-64 pt-20 scroll-thin">
-      <div className="mx-auto mb-3 max-w-[1100px] rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-center text-sm text-muted">
-        3D graphics aren’t available in this browser, so here’s the flat table. Everything else still works.
+      <div className="mx-auto mb-3 flex max-w-[1100px] flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-center text-sm text-muted">
+        <span>3D graphics aren’t available right now, so here’s the flat table. Everything else still works.</span>
+        {onRetry && <button onClick={onRetry} className="rounded-lg bg-snow px-3 py-1 font-semibold text-ink transition hover:bg-white">Try 3D again</button>}
       </div>
       <div className="mx-auto grid min-w-[880px] max-w-[1100px] gap-1" style={{ gridTemplateColumns: 'repeat(18, minmax(0, 1fr))' }}>
         {ELEMENTS.map((e) => {

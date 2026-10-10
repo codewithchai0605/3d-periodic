@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { acquireRenderer, releaseRenderer, runViewerLoop } from '../lib/sharedRenderer.js'
 
 const FOV = 34
 const NUCLEON_R = 0.075
@@ -16,16 +17,8 @@ export default function AtomViewer({ el, className = '' }) {
   useEffect(() => {
     const node = host.current
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    let renderer
-    try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    } catch {
-      return
-    }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-    node.appendChild(renderer.domElement)
-    renderer.domElement.style.display = 'block'
-    renderer.domElement.style.touchAction = 'none'
+    const renderer = acquireRenderer(node)
+    if (!renderer) return
 
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100)
@@ -143,11 +136,7 @@ export default function AtomViewer({ el, className = '' }) {
       electrons.instanceMatrix.needsUpdate = true
     }
 
-    const timer = new THREE.Timer()
-    timer.connect(document)
-    renderer.setAnimationLoop(() => {
-      timer.update()
-      const dt = Math.min(timer.getDelta(), 0.1)
+    const stopLoop = runViewerLoop(node, (dt) => {
       if (!reduced) {
         state.t += dt
         placeElectrons(state.t)
@@ -173,15 +162,12 @@ export default function AtomViewer({ el, className = '' }) {
     return () => {
       api.current = null
       ro.disconnect()
-      renderer.setAnimationLoop(null)
-      timer.dispose()
+      stopLoop()
       clear()
       controls.dispose()
       sphere.dispose()
       Object.values(mats).forEach((x) => x.dispose())
-      renderer.dispose()
-      renderer.forceContextLoss() // free the GPU context right away when switching tabs
-      renderer.domElement.remove()
+      releaseRenderer(node) // the renderer is shared, so it is NOT disposed here
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

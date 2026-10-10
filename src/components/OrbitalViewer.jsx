@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { sampleOrbital } from '../lib/orbitals.js'
+import { acquireRenderer, releaseRenderer, runViewerLoop } from '../lib/sharedRenderer.js'
 
 /** Point-cloud view of one orbital (n, l, orientation index). Blue = positive lobe, pink = negative lobe. */
 export default function OrbitalViewer({ n, l, mi, className = '', label }) {
@@ -11,16 +12,8 @@ export default function OrbitalViewer({ n, l, mi, className = '', label }) {
   useEffect(() => {
     const node = host.current
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    let renderer
-    try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    } catch {
-      return
-    }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-    node.appendChild(renderer.domElement)
-    renderer.domElement.style.display = 'block'
-    renderer.domElement.style.touchAction = 'none'
+    const renderer = acquireRenderer(node)
+    if (!renderer) return
 
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 50)
@@ -61,11 +54,7 @@ export default function OrbitalViewer({ n, l, mi, className = '', label }) {
       scene.add(cloud)
     }
 
-    const timer = new THREE.Timer()
-    timer.connect(document)
-    renderer.setAnimationLoop(() => {
-      timer.update()
-      const dt = Math.min(timer.getDelta(), 0.1)
+    const stopLoop = runViewerLoop(node, (dt) => {
       if (cloud && born < 1 && !reduced) {
         born = Math.min(1, born + dt / 0.5)
         cloud.scale.setScalar(0.5 + 0.5 * (1 - Math.pow(1 - born, 3)))
@@ -91,17 +80,14 @@ export default function OrbitalViewer({ n, l, mi, className = '', label }) {
     return () => {
       api.current = null
       ro.disconnect()
-      renderer.setAnimationLoop(null)
-      timer.dispose()
+      stopLoop()
       controls.dispose()
       if (cloud) cloud.geometry.dispose()
       mat.dispose()
       axes.children.forEach((c) => { c.geometry.dispose(); c.material.dispose() })
       nucleus.geometry.dispose()
       nucleus.material.dispose()
-      renderer.dispose()
-      renderer.forceContextLoss() // free the GPU context right away when switching tabs
-      renderer.domElement.remove()
+      releaseRenderer(node) // shared renderer stays alive
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

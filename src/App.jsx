@@ -51,6 +51,7 @@ export default function App() {
     try { return localStorage.getItem(UNIT_KEY) || 'K' } catch { return 'K' }
   })
   const [flat, setFlat] = useState(false) // true when WebGL is unavailable
+  const [sceneKey, setSceneKey] = useState(0) // bump to rebuild the 3D scene ("Try 3D again")
   const [dockH, setDockH] = useState(180)
   const [tourH, setTourH] = useState(200)
   const scene = useRef(null)
@@ -202,6 +203,7 @@ export default function App() {
     <UnitCtx.Provider value={{ unit, setUnit }}>
       <div className="fixed inset-0 overflow-hidden">
         <SceneView
+          key={sceneKey}
           ref={scene}
           layout={layout}
           mode={mode}
@@ -213,6 +215,10 @@ export default function App() {
           spin={spin}
           onSelect={select}
           onFail={() => setFlat(true)}
+          onRetry={() => {
+            setFlat(false)
+            setSceneKey((k) => k + 1)
+          }}
         />
 
         <TopBar

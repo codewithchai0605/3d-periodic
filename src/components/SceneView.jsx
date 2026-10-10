@@ -5,7 +5,7 @@ import { CAT_BY_ID } from '../data/categories.js'
 import FlatTable from './FlatTable.jsx'
 
 /** Owns the Three.js engine and mirrors React state into it. */
-export default function SceneView({ ref, layout, mode, temp, bars, highlight, selected, view, spin, onSelect, onFail }) {
+export default function SceneView({ ref, layout, mode, temp, bars, highlight, selected, view, spin, onSelect, onFail, onRetry }) {
   const host = useRef(null)
   const engine = useRef(null)
   const cb = useRef({})
@@ -13,6 +13,8 @@ export default function SceneView({ ref, layout, mode, temp, bars, highlight, se
   const [hover, setHover] = useState(null)
   const [failed, setFailed] = useState(false)
   const [ready, setReady] = useState(false)
+  const [paused, setPaused] = useState(false) // the browser took the GPU away; waiting for it back
+  const lostTimer = useRef(0)
 
   useImperativeHandle(ref, () => ({
     reset: () => engine.current?.resetView(),
@@ -29,6 +31,19 @@ export default function SceneView({ ref, layout, mode, temp, bars, highlight, se
         onSelect: (z) => cb.current.onSelect(z),
         onHover: (z, x, y) => setHover(z ? { z, x, y } : null),
         onReady: () => setReady(true),
+        // Phones can reclaim the GPU context (memory pressure, app switching). Give the browser a few
+        // seconds to hand it back before falling back to the flat table.
+        onContext: (state) => {
+          clearTimeout(lostTimer.current)
+          if (state === 'lost') {
+            setPaused(true)
+            lostTimer.current = setTimeout(() => {
+              setPaused(false)
+              setFailed(true)
+              onFail?.()
+            }, 6000)
+          } else setPaused(false)
+        },
       })
     } catch (err) {
       console.error(err)
@@ -45,6 +60,7 @@ export default function SceneView({ ref, layout, mode, temp, bars, highlight, se
     eng.setSelected(selected)
     eng.setSpin(spin)
     return () => {
+      clearTimeout(lostTimer.current)
       eng.dispose()
       engine.current = null
     }
@@ -68,7 +84,12 @@ export default function SceneView({ ref, layout, mode, temp, bars, highlight, se
           Loading the elements…
         </div>
       )}
-      {failed && <FlatTable mode={mode} temp={temp} highlight={highlight} selected={selected} onSelect={onSelect} />}
+      {failed && <FlatTable mode={mode} temp={temp} highlight={highlight} selected={selected} onSelect={onSelect} onRetry={onRetry} />}
+      {paused && !failed && (
+        <div role="status" className="glass pointer-events-none absolute left-1/2 top-20 z-30 -translate-x-1/2 rounded-full px-4 py-2 text-sm" style={{ animation: 'pop-in .25s both' }}>
+          Your device paused 3D graphics. Recovering…
+        </div>
+      )}
       {hovered && (
         <div
           className="pointer-events-none fixed z-30 flex items-center gap-2.5 rounded-xl border border-white/10 bg-ink/90 py-1.5 pl-1.5 pr-3 text-sm shadow-xl backdrop-blur"
