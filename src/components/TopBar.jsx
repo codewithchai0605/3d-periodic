@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { searchElements } from '../data/elements.js'
 import { CAT_BY_ID } from '../data/categories.js'
-import { SearchIcon, QuizIcon, HelpIcon, CloseIcon, CompassIcon, ChartIcon, DiceIcon, MoreIcon } from './Icons.jsx'
+import { SearchIcon, QuizIcon, HelpIcon, CloseIcon, CompassIcon, ChartIcon, DiceIcon, MoreIcon, FlaskIcon } from './Icons.jsx'
 
 function Mark() {
   // a tiny emission-spectrum motif: bright lines on a dark slit
@@ -107,7 +107,7 @@ function Menu({ items }) {
 
 const ghost = 'glass hidden size-11 place-items-center rounded-full text-muted transition hover:text-snow md:grid'
 
-export default function TopBar({ query, setQuery, onPick, inputRef, onQuiz, onHelp, onTour, onTrends, onRandom, rightInset = 0 }) {
+export default function TopBar({ query, setQuery, onPick, inputRef, onQuiz, onHelp, onTour, onTrends, onLab, onRandom, rightInset = 0 }) {
   return (
     <header className="pointer-events-none fixed left-0 top-0 z-20 flex items-center gap-3 px-3 pt-3 transition-[right] duration-300 md:px-4" style={{ right: rightInset }}>
       <div className="pointer-events-auto flex shrink-0 items-center gap-2.5">
@@ -124,6 +124,9 @@ export default function TopBar({ query, setQuery, onPick, inputRef, onQuiz, onHe
         <button onClick={onTour} className="glass hidden h-11 items-center gap-2 rounded-full px-4 font-medium text-snow transition hover:bg-white/10 md:flex" title="A 2-minute guided tour">
           <CompassIcon className="size-[18px]" /><span className="hidden xl:inline">Tour</span>
         </button>
+        <button onClick={onLab} className="glass hidden h-11 items-center gap-2 rounded-full px-4 font-medium text-snow transition hover:bg-white/10 md:flex" title="Build compounds and explore 3D structures">
+          <FlaskIcon className="size-[18px]" /><span className="hidden xl:inline">Compound lab</span>
+        </button>
         <button onClick={onTrends} className={ghost} aria-label="Trends explorer" title="Trends explorer"><ChartIcon /></button>
         <button onClick={onRandom} className={ghost} aria-label="Show a random element" title="Surprise me"><DiceIcon /></button>
         <button onClick={onQuiz} className="flex h-11 items-center gap-2 rounded-full bg-snow px-4 font-semibold text-ink shadow-lg transition hover:bg-white">
@@ -132,7 +135,7 @@ export default function TopBar({ query, setQuery, onPick, inputRef, onQuiz, onHe
           <span className="sr-only sm:hidden">Quiz</span>
         </button>
         <button onClick={onHelp} aria-label="How to use this site" className={ghost}><HelpIcon /></button>
-        <Menu items={[['Guided tour', CompassIcon, onTour], ['Trends explorer', ChartIcon, onTrends], ['Surprise me', DiceIcon, onRandom], ['How to use', HelpIcon, onHelp]]} />
+        <Menu items={[['Compound lab', FlaskIcon, onLab], ['Guided tour', CompassIcon, onTour], ['Trends explorer', ChartIcon, onTrends], ['Surprise me', DiceIcon, onRandom], ['How to use', HelpIcon, onHelp]]} />
       </div>
     </header>
   )

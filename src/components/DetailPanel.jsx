@@ -8,6 +8,8 @@ import { stateAt } from '../lib/phase.js'
 import { configString } from '../lib/config.js'
 import { ANGULAR, L_NAMES, SHAPE_NOTES } from '../lib/orbitals.js'
 import { useUnit, fmtTemp, altUnit } from '../lib/units.js'
+import { compoundsWith } from '../lib/chem.js'
+import { FlaskIcon } from './Icons.jsx'
 
 const SHELL_NAMES = ['K', 'L', 'M', 'N', 'O', 'P', 'Q']
 const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹'
@@ -250,7 +252,24 @@ function Visual({ el, view, setView, orb, setOrb, mi, setMi }) {
   )
 }
 
-function Content({ el, temp, onSelect, scrollTop }) {
+function Compounds({ el, onOpenLab }) {
+  const list = compoundsWith(el.symbol)
+  return (
+    <Section title="Compounds and structures" aside={list.length ? `${list.length} in the lab` : undefined}>
+      {list.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {list.slice(0, 14).map((m) => (
+            <button key={m.id} onClick={() => onOpenLab({ tab: 'structures', molId: m.id })} title={m.name} className="rounded-xl border border-white/10 bg-white/[0.05] px-2.5 py-1 font-display text-[15px] font-semibold text-accent transition hover:bg-white/10">{m.formula}</button>
+          ))}
+          {list.length > 14 && <button onClick={() => onOpenLab({ tab: 'structures', molId: list[0].id })} className="rounded-xl px-2.5 py-1 text-sm text-muted hover:text-snow">+{list.length - 14} more</button>}
+        </div>
+      ) : <p className="text-sm text-muted">No structures with {el.name} in the lab yet, but you can still combine it with other atoms.</p>}
+      <button onClick={() => onOpenLab({ tab: 'combine', flask: { [el.symbol]: 1 } })} className="mt-2.5 flex items-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-sm transition hover:bg-white/10"><FlaskIcon className="size-4" />Mix {el.name} with other atoms</button>
+    </Section>
+  )
+}
+
+function Content({ el, temp, onSelect, scrollTop, onOpenLab }) {
   const { unit } = useUnit()
   const cat = CAT_BY_ID[el.category]
   const nb = neighbours(el)
@@ -344,6 +363,8 @@ function Content({ el, temp, onSelect, scrollTop }) {
         </div>
       </Section>
 
+      <Compounds el={el} onOpenLab={onOpenLab} />
+
       <Section title="Around it in the table">
         <div className="mx-auto grid w-fit grid-cols-3 gap-1.5">
           {[null, 'up', null, 'left', 'self', 'right', null, 'down', null].map((slot, i) => {
@@ -371,7 +392,7 @@ function Content({ el, temp, onSelect, scrollTop }) {
   )
 }
 
-export default function DetailPanel({ el, temp, onClose, onSelect, onPrev, onNext, sheet, expanded, setExpanded }) {
+export default function DetailPanel({ el, temp, onClose, onSelect, onOpenLab, onPrev, onNext, sheet, expanded, setExpanded }) {
   const scroller = useRef(null)
   const drag = useRef(null)
   const [copied, setCopied] = useState(false)
@@ -450,7 +471,7 @@ export default function DetailPanel({ el, temp, onClose, onSelect, onPrev, onNex
       </header>
 
       <div ref={scroller} className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 pb-8">
-        <Content key={el.z} el={el} temp={temp} onSelect={onSelect} scrollTop={scrollTop} />
+        <Content key={el.z} el={el} temp={temp} onSelect={onSelect} scrollTop={scrollTop} onOpenLab={onOpenLab} />
       </div>
     </aside>
   )

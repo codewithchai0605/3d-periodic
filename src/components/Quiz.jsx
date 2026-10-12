@@ -8,7 +8,7 @@ const loadBest = () => {
   try { return JSON.parse(localStorage.getItem(BEST_KEY)) || {} } catch { return {} }
 }
 
-export default function Quiz({ onClose, onShowElement }) {
+export default function Quiz({ onClose, onShowElement, onShowMolecule }) {
   const [phase, setPhase] = useState('setup') // setup | play | done
   const [level, setLevel] = useState('starter')
   const [qs, setQs] = useState([])
@@ -46,7 +46,7 @@ export default function Quiz({ onClose, onShowElement }) {
         })
       } else {
         setStreak(0)
-        setMissed((m) => [...m, q.el])
+        setMissed((m) => [...m, q.el ?? q.mol])
       }
     },
     [picked, q],
@@ -91,7 +91,7 @@ export default function Quiz({ onClose, onShowElement }) {
     return 'Every chemist started here. Review the misses below and try again.'
   }, [phase, score, qs.length])
 
-  const cat = q ? CAT_BY_ID[q.el.category] : null
+  const cat = q && q.el ? CAT_BY_ID[q.el.category] : null
 
   return (
     <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-ink/70 p-3 backdrop-blur-sm" style={{ animation: 'fade-in .2s both' }} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -159,16 +159,24 @@ export default function Quiz({ onClose, onShowElement }) {
                 <p className="font-semibold" style={{ color: q.options[picked].correct ? 'var(--color-good)' : 'var(--color-bad)' }}>
                   {q.options[picked].correct ? 'Correct!' : `Not quite. The answer is ${q.options.find((o) => o.correct).label}.`}
                 </p>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted">
-                  <b style={{ color: cat.color }}>{q.el.name} ({q.el.symbol}, no. {q.el.z}).</b> {q.el.fact}
-                </p>
+                {q.mol ? (
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted">
+                    <b className="text-accent">{q.mol.name} ({q.mol.formula}).</b> {q.mol.shape}{q.mol.hybrid ? ` · ${q.mol.hybrid}` : ''}{q.mol.angle && q.mol.angle !== '—' ? ` · ${q.mol.angle}` : ''}. {q.mol.notes[0]}
+                  </p>
+                ) : (
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted">
+                    <b style={{ color: cat.color }}>{q.el.name} ({q.el.symbol}, no. {q.el.z}).</b> {q.el.fact}
+                  </p>
+                )}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <button autoFocus onClick={next} className="rounded-xl bg-snow px-4 py-2 font-semibold text-ink transition hover:bg-white">
                     {i + 1 >= qs.length ? 'See results' : 'Next question'}
                   </button>
-                  <button onClick={() => onShowElement(q.el.z)} className="rounded-xl border border-white/15 px-4 py-2 text-sm transition hover:bg-white/10">
-                    View {q.el.name} in 3D
-                  </button>
+                  {q.mol ? (
+                    <button onClick={() => onShowMolecule(q.mol.id)} className="rounded-xl border border-white/15 px-4 py-2 text-sm transition hover:bg-white/10">View {q.mol.formula} in the lab</button>
+                  ) : (
+                    <button onClick={() => onShowElement(q.el.z)} className="rounded-xl border border-white/15 px-4 py-2 text-sm transition hover:bg-white/10">View {q.el.name} in 3D</button>
+                  )}
                 </div>
               </div>
             )}
@@ -188,14 +196,18 @@ export default function Quiz({ onClose, onShowElement }) {
             {missed.length > 0 && (
               <div className="mt-5">
                 <h3 className="font-display text-lg font-semibold">Worth another look</h3>
-                <p className="text-sm text-muted">Select one to see it in the 3D table.</p>
+                <p className="text-sm text-muted">Select one to see it in 3D.</p>
                 <ul className="mt-2 flex flex-wrap gap-2">
                   {missed.map((e) => (
-                    <li key={e.z}>
-                      <button onClick={() => onShowElement(e.z)} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-1.5 pl-1.5 pr-3 transition hover:bg-white/10">
-                        <span className="grid size-8 place-items-center rounded-lg font-display text-sm font-bold text-ink" style={{ background: CAT_BY_ID[e.category].color }}>{e.symbol}</span>
-                        {e.name}
-                      </button>
+                    <li key={e.id ?? e.z}>
+                      {e.id ? (
+                        <button onClick={() => onShowMolecule(e.id)} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-1.5 pl-3 pr-3 transition hover:bg-white/10"><b className="font-display text-accent">{e.formula}</b> {e.name}</button>
+                      ) : (
+                        <button onClick={() => onShowElement(e.z)} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-1.5 pl-1.5 pr-3 transition hover:bg-white/10">
+                          <span className="grid size-8 place-items-center rounded-lg font-display text-sm font-bold text-ink" style={{ background: CAT_BY_ID[e.category].color }}>{e.symbol}</span>
+                          {e.name}
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>

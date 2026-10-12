@@ -36,7 +36,7 @@ export default function Help({ onClose, onExplore, onTour }) {
           <li className="flex gap-3"><b className="shrink-0 font-display text-lg text-accent">Look around.</b><span className="text-muted">Drag to orbit, scroll or pinch to zoom, right-drag to pan.</span></li>
           <li className="flex gap-3"><b className="shrink-0 font-display text-lg text-accent">Click an element.</b><span className="text-muted">The camera flies in and a panel opens: a spinning atom, a 3D orbital explorer, its story, properties, shells and more.</span></li>
           <li className="flex gap-3"><b className="shrink-0 font-display text-lg text-accent">Change the view.</b><span className="text-muted">Rearrange the elements as a table, rings, helix or sphere. Colour them by family, state of matter at any temperature, crust abundance or a heatmap, then raise tiles by value.</span></li>
-          <li className="flex gap-3"><b className="shrink-0 font-display text-lg text-accent">Go deeper.</b><span className="text-muted">Take the guided tour, plot trends against each other, search by words like “radioactive” or “battery”, or test yourself with the quiz.</span></li>
+          <li className="flex gap-3"><b className="shrink-0 font-display text-lg text-accent">Go deeper.</b><span className="text-muted">Open the Compound lab to see 140 molecules in 3D and mix atoms into compounds, take the guided tour, plot trends, search by words like “radioactive”, or test yourself with the quiz.</span></li>
         </ol>
 
         <div className="mt-6 rounded-2xl bg-white/[0.05] p-4">

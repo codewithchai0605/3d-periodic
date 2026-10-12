@@ -7,6 +7,7 @@ import Quiz from './components/Quiz.jsx'
 import Help from './components/Help.jsx'
 import Tour from './components/Tour.jsx'
 import Trends from './components/Trends.jsx'
+import Lab from './components/Lab.jsx'
 import { ELEMENTS, byZ, bySymbol, searchElements } from './data/elements.js'
 import { MODE_BY_ID, styleFor } from './lib/scales.js'
 import { TOUR } from './lib/tour.js'
@@ -43,6 +44,8 @@ export default function App() {
   const [quiz, setQuiz] = useState(false)
   const [trends, setTrends] = useState(false)
   const [tour, setTour] = useState(null) // null or step index
+  const [lab, setLab] = useState(null) // null or {tab, molId, flask}
+  const [labKey, setLabKey] = useState(0)
   const [expanded, setExpanded] = useState(false) // mobile bottom sheet
   const [help, setHelp] = useState(() => {
     try { return !localStorage.getItem(SEEN_KEY) && fromHash() == null } catch { return false }
@@ -78,6 +81,21 @@ export default function App() {
   useEffect(() => {
     if (selected == null) setExpanded(false)
   }, [selected])
+
+  /* ---- compound lab ---- */
+  const openLab = useCallback((initial = {}) => {
+    // the lab shares one GPU renderer with the element panel, so close the panel first
+    setSelected(null)
+    setQuiz(false)
+    setTrends(false)
+    setTour(null)
+    setLabKey((k) => k + 1)
+    setLab(initial)
+  }, [])
+  const labToElement = useCallback((z) => {
+    setLab(null)
+    setSelected(z)
+  }, [])
 
   /* ---- helpers ---- */
   const select = useCallback((z) => setSelected(z), [])
@@ -148,13 +166,14 @@ export default function App() {
       const typing = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)
       if (e.key === 'Escape') {
         if (quiz) setQuiz(false)
+        else if (lab) setLab(null)
         else if (trends) setTrends(false)
         else if (help) closeHelp()
         else if (tour != null) exitTour()
         else if (selected) setSelected(null)
         return
       }
-      if (quiz || help || trends) return
+      if (quiz || help || trends || lab) return
       if ((e.key === '/' || (e.key === 'k' && (e.metaKey || e.ctrlKey))) && !(typing && e.target === searchRef.current)) {
         e.preventDefault()
         searchRef.current?.focus()
@@ -230,6 +249,7 @@ export default function App() {
           onHelp={() => setHelp(true)}
           onTour={startTour}
           onTrends={() => setTrends(true)}
+          onLab={() => openLab({})}
           onRandom={random}
           rightInset={rightInset}
         />
@@ -279,6 +299,7 @@ export default function App() {
             setExpanded={setExpanded}
             onClose={() => setSelected(null)}
             onSelect={select}
+            onOpenLab={openLab}
             onPrev={() => setSelected(Math.max(1, el.z - 1))}
             onNext={() => setSelected(Math.min(118, el.z + 1))}
           />
@@ -291,8 +312,10 @@ export default function App() {
               setQuiz(false)
               setSelected(z)
             }}
+            onShowMolecule={(id) => openLab({ tab: 'structures', molId: id })}
           />
         )}
+        {lab && <Lab key={labKey} initial={lab} onClose={() => setLab(null)} onOpenElement={labToElement} />}
         {trends && (
           <Trends
             onClose={() => setTrends(false)}

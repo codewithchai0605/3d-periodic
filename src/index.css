@@ -91,3 +91,12 @@ input[type='range'].temp::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+@keyframes bob {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(var(--dx, 4px), var(--dy, -6px)); }
+}
+@keyframes settle {
+  from { transform: translateY(-70px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}

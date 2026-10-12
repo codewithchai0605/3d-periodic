@@ -21,3 +21,6 @@ export const CompassIcon = (p) => <I {...p}><circle cx="12" cy="12" r="9" /><pat
 export const ChartIcon = (p) => <I {...p}><path d="M4 4v16h16" /><path d="m7 15 3.5-4.5 3 2.5L19 7" /></I>
 export const DiceIcon = (p) => <I {...p}><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01" strokeWidth="2.4" /></I>
 export const MoreIcon = (p) => <I {...p}><path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth="2.6" /></I>
+export const FlaskIcon = (p) => <I {...p}><path d="M9 3h6M10 3v6.2L4.8 18a2.2 2.2 0 0 0 1.9 3.3h10.6a2.2 2.2 0 0 0 1.9-3.3L14 9.2V3" /><path d="M7.5 15h9" /></I>
+export const RulerIcon = (p) => <I {...p}><path d="m4 15 11-11 5 5L9 20 4 15Z" /><path d="m8 11 2 2M11 8l2 2M6 13l1 1" /></I>
+export const TrashIcon = (p) => <I {...p}><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13" /></I>
